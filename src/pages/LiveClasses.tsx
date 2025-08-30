@@ -5,7 +5,7 @@ const LiveClasses: React.FC = () => {
     <div className="min-h-screen bg-gray-900">
       <div className="w-full h-screen">
         <iframe 
-          src="https://nexttoppers-krgb-alphaproject.netlify.app/" 
+          src="https://irsion-10-0-hq44-alphaproject.netlify.app/" 
           width="100%" 
           height="100%" 
           frameBorder="0"
