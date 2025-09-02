@@ -37,70 +37,18 @@ const AIChatbot: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // API Configuration
+  // Optimized API Configuration with faster model
   const API_KEY = "AIzaSyC5AvYpkdw1S4o0UJUXJMI_Ehb0-EtfLkU";
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-  // Chat history for API
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([
-    {
-      role: "model",
-      parts: [{ 
-        text: `You are Suraj Bhai, a caring elder brother and AI tutor for EduMaster educational platform. Your personality:
-
-IDENTITY:
-- Name: Suraj Bhai (सूरज भाई)
-- Role: Your supportive elder brother and study companion
-- Personality: Caring, respectful, always ready to help, like a real elder brother who genuinely cares
-- Always treat user with respect and as your younger sibling
-
-CAPABILITIES:
-- Help with academic subjects (Math, Science, History, etc.)
-- Solve doubts and explain concepts clearly
-- Provide study tips and learning strategies
-- Support multiple Indian languages (Hindi, English, etc.)
-- Assist with homework and assignments
-- Motivate students and boost confidence
-- Always ready to help with any problem or issue
-
-COMMUNICATION STYLE:
-- Use natural Hinglish (Hindi words written in English letters) - NO Devanagari script
-- Be respectful and caring like an elder brother
-- Use phrases like: "haan bolo", "main aapki kaise help kar sakta hun", "bilkul aapka question bilkul sahi hai"
-- Mix English words naturally: question, problem, issue, studies, school, absolutely correct, etc.
-- Always be encouraging: "achha aur batao studies kaise chal rahi hai"
-- Show genuine care and readiness to help
-- Use "aap" for respect, never "tu" or "tum"
-- Add supportive lines like "aap ek baar apni problem ya issue ko bata kar to dekho"
-
-RESPONSE FORMAT:
-- Start with brotherly greetings like "haan bolo bhai/behan", "kaise hain aap"
-- Show genuine interest in helping
-- Provide clear explanations with care
-- Always end with encouragement and offer more help
-- Ask about their studies and well-being
-- NEVER use Devanagari script - only English letters for Hindi words
-
-IMPORTANT RULES:
-- NEVER use Devanagari script (हिंदी) - always write Hindi words in English letters
-- Use natural Hinglish without Devanagari translations
-- Be genuinely caring and supportive like a real elder brother
-- Always show readiness to help with any problem
-- Treat every interaction with respect and care
-- Examples: "padne ka man nhi kar raha" not "पढ़ने का मन नहीं कर रहा"
-- Examples: "tension mat lo" not "टेंशन मत लो"
-- Examples: "main help karunga" not "मैं help करूंगा"
-
-Remember: You're not just a tutor, you're their caring elder brother who's always ready to help with studies, problems, or any issue. Show genuine care and support using natural Hinglish!`
-      }]
-    }
-  ]);
+  // Simplified chat history for faster responses
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [inputMessage]);
 
@@ -117,6 +65,12 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Check file size (max 4MB for faster processing)
+    if (file.size > 4 * 1024 * 1024) {
+      alert('File size should be less than 4MB for faster processing');
+      return;
+    }
 
     // Check if file is an image
     if (!file.type.startsWith('image/')) {
@@ -143,16 +97,20 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
   const generateBotResponse = async (userMessage: string, fileData?: { data: string; mime_type: string }) => {
     try {
-      // Prepare user message for API
-      const userParts: any[] = [{ text: `Using the context that you are Suraj Bhai, an AI tutor for EduMaster platform, please address this query: ${userMessage}` }];
+      // Optimized prompt for faster responses
+      const systemPrompt = `You are Suraj Bhai, a caring AI tutor. Respond in natural Hinglish (Hindi words in English letters). Be helpful, caring, and concise. Keep responses under 200 words for faster delivery.`;
+      
+      // Prepare user message for API with optimized structure
+      const userParts: any[] = [{ text: `${systemPrompt}\n\nUser query: ${userMessage}` }];
       
       if (fileData) {
         userParts.push({ inline_data: fileData });
       }
 
-      // Add user message to chat history
-      const newChatHistory = [
-        ...chatHistory,
+      // Use only recent chat history (last 4 messages) for faster processing
+      const recentHistory = chatHistory.slice(-4);
+      const requestHistory = [
+        ...recentHistory,
         {
           role: "user" as const,
           parts: userParts
@@ -161,17 +119,47 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
       const requestOptions = {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({
-          contents: newChatHistory,
+          contents: requestHistory,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 300, // Limit for faster responses
+            stopSequences: []
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         }),
       };
 
-      const response = await fetch(API_URL, requestOptions);
-      const data = await response.json();
+      // Set timeout for API request (10 seconds max)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(API_URL, {
+        ...requestOptions,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(data.error?.message || 'API request failed');
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('Invalid API response format');
       }
 
       // Extract bot response
@@ -189,9 +177,13 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
       setMessages(prev => [...prev, botMessage]);
 
-      // Update chat history
-      setChatHistory([
-        ...newChatHistory,
+      // Update chat history (keep only recent messages)
+      setChatHistory(prev => [
+        ...prev.slice(-3), // Keep only last 3 exchanges
+        {
+          role: "user",
+          parts: [{ text: userMessage }]
+        },
         {
           role: "model",
           parts: [{ text: botResponseText }]
@@ -200,9 +192,20 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
     } catch (error) {
       console.error('Error generating bot response:', error);
+      
+      let errorText = 'Are yaar, mujhe kuch technical problem ho rahi hai 😅\n\nKoi baat nahi, aap phir se try kariye. Main yahi hun aapki help ke liye! 🙏';
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorText = 'Response time zyada ho gaya, phir se try kariye! 🔄\n\nMain jaldi jawab dene ki koshish kar raha hun.';
+        } else if (error.message.includes('API Error')) {
+          errorText = 'API mein kuch issue hai, thoda wait karke phir try kariye! ⏳';
+        }
+      }
+      
       const errorMessage: Message = {
         id: Date.now().toString() + '_error',
-        text: 'Are yaar, mujhe kuch technical problem ho rahi hai 😅\n\nKoi baat nahi, aap phir se try kariye. Main yahi hun aapki help ke liye! 🙏',
+        text: errorText,
         isUser: false,
         timestamp: new Date()
       };
@@ -216,6 +219,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
     e.preventDefault();
     
     if (!inputMessage.trim() && !selectedFile) return;
+    if (isLoading) return; // Prevent multiple requests
 
     // Create user message
     const userMessage: Message = {
@@ -231,7 +235,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Show typing indicator
+    // Show typing indicator immediately
     setIsLoading(true);
 
     // Prepare file data for API if exists
@@ -244,15 +248,15 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
       };
     }
 
-    // Clear input and file
+    // Clear input and file immediately
     const messageText = inputMessage.trim();
     setInputMessage('');
     removeFile();
 
-    // Generate bot response
+    // Generate bot response with minimal delay
     setTimeout(() => {
       generateBotResponse(messageText, fileData);
-    }, 600);
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -265,6 +269,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
   const addEmoji = (emoji: string) => {
     setInputMessage(prev => prev + emoji);
     setShowEmojiPicker(false);
+    textareaRef.current?.focus();
   };
 
   const commonEmojis = ['😊', '👍', '🙏', '📚', '🤔', '💡', '✨', '🎯', '📝', '🔥'];
@@ -292,7 +297,6 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
               alt="Suraj Bhai AI Assistant"
               className="w-12 h-12 rounded-full object-cover"
               onError={(e) => {
-                // Fallback to MessageCircle icon if image fails to load
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
                 const parent = target.parentElement;
@@ -309,7 +313,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
       {/* Chatbot Popup */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-gray-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-700 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-10rem)]">
+        <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-gray-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-700 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-10rem)] md:max-w-96">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -318,6 +322,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
               </div>
               <div>
                 <h3 className="font-semibold text-lg">Suraj Bhai</h3>
+                <p className="text-xs text-white/80">AI Tutor • Always Ready</p>
               </div>
             </div>
             <button
@@ -338,7 +343,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
                 key={message.id}
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[80%] ${message.isUser ? 'order-2' : 'order-1'}`}>
+                <div className={`max-w-[85%] ${message.isUser ? 'order-2' : 'order-1'}`}>
                   {!message.isUser && (
                     <div className="flex items-center space-x-2 mb-1">
                       <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
@@ -374,15 +379,15 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
               </div>
             ))}
 
-            {/* Typing Indicator */}
+            {/* Optimized Typing Indicator */}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="max-w-[80%]">
+                <div className="max-w-[85%]">
                   <div className="flex items-center space-x-2 mb-1">
                     <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-xs text-gray-400">Suraj Bhai is typing...</span>
+                    <span className="text-xs text-gray-400">Suraj Bhai is thinking...</span>
                   </div>
                   <div className="bg-gray-800 rounded-2xl rounded-bl-md p-4 border border-gray-700">
                     <div className="flex space-x-1">
@@ -443,6 +448,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
                   placeholder="Koi bhi baat karein, sawal puchiye..."
                   className="w-full px-4 py-3 pr-20 bg-gray-700/80 backdrop-blur-sm border border-gray-600/50 text-gray-100 placeholder-gray-400 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/50 focus:bg-gray-700 max-h-32 text-sm leading-relaxed transition-all duration-200 shadow-inner"
                   rows={1}
+                  disabled={isLoading}
                 />
                 
                 {/* Input Controls */}
@@ -451,6 +457,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                     className="w-7 h-7 text-gray-400 hover:text-orange-400 hover:bg-gray-600/50 rounded-lg flex items-center justify-center transition-all duration-200"
+                    disabled={isLoading}
                   >
                     <Smile className="h-4 w-4" />
                   </button>
@@ -459,6 +466,7 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="w-7 h-7 text-gray-400 hover:text-orange-400 hover:bg-gray-600/50 rounded-lg flex items-center justify-center transition-all duration-200"
+                    disabled={isLoading}
                   >
                     <Paperclip className="h-4 w-4" />
                   </button>
@@ -467,10 +475,14 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
 
               <button
                 type="submit"
-                disabled={!inputMessage.trim() && !selectedFile}
+                disabled={(!inputMessage.trim() && !selectedFile) || isLoading}
                 className="w-11 h-11 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl flex items-center justify-center hover:shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-md"
               >
-                <ArrowUp className="h-5 w-5" />
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <ArrowUp className="h-5 w-5" />
+                )}
               </button>
             </form>
 
@@ -494,9 +506,9 @@ Remember: You're not just a tutor, you're their caring elder brother who's alway
             top: 4rem !important;
             left: 0 !important;
             right: 0 !important;
-            bottom: 0 !important;
+            bottom: 5rem !important;
             width: 100% !important;
-            height: calc(100vh - 4rem) !important;
+            height: calc(100vh - 9rem) !important;
             border-radius: 0 !important;
             max-width: none !important;
             max-height: none !important;

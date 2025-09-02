@@ -6,6 +6,7 @@ import TelegramPopup from './components/TelegramPopup';
 import LoadingSpinner from './components/LoadingSpinner';
 import DevToolsProtection from './components/DevToolsProtection';
 import IframePreloader from './components/IframePreloader';
+import BottomNavigation from './components/BottomNavigation';
 import Home from './pages/Home';
 import LiveClasses from './pages/LiveClasses';
 import Books from './pages/Books';
@@ -64,6 +65,7 @@ const AppContent: React.FC = () => {
         
         <TelegramPopup />
         <AIChatbot />
+        <BottomNavigation />
       </div>
     </Router>
   );

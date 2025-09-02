@@ -82,6 +82,27 @@
     }
   }
 
+  /* Mobile bottom navigation spacing */
+  @media (max-width: 768px) {
+    .mobile-content {
+      padding-bottom: 5rem !important;
+    }
+    
+    /* Adjust chatbot position on mobile */
+    .chatbot-mobile {
+      bottom: 6rem !important;
+    }
+  }
+
+  /* Optimize iframe loading */
+  iframe {
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
   /* Disable text selection and context menu */
   * {
     -webkit-user-select: none !important;
