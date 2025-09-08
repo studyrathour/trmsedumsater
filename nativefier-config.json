@@ -1,0 +1,50 @@
+{
+  "name": "EduMaster",
+  "targetUrl": "https://your-deployed-site-url.com",
+  "platform": "all",
+  "arch": "x64",
+  "electronVersion": "22.0.0",
+  "overwrite": true,
+  "asar": false,
+  "singleInstance": true,
+  "width": 1200,
+  "height": 800,
+  "minWidth": 800,
+  "minHeight": 600,
+  "maxWidth": 1920,
+  "maxHeight": 1080,
+  "resizable": true,
+  "maximizable": true,
+  "minimizable": true,
+  "fullscreenable": true,
+  "webSecurity": false,
+  "ignoreCertificate": true,
+  "ignoreGpuBlacklist": true,
+  "enableEs3Apis": true,
+  "insecure": true,
+  "internalUrls": [
+    ".*\\.netlify\\.app.*",
+    ".*\\.vercel\\.app.*",
+    ".*\\.firebase\\.app.*",
+    ".*\\.firebaseapp\\.com.*",
+    ".*\\.googleapis\\.com.*",
+    ".*\\.google\\.com.*",
+    ".*t\\.me.*",
+    ".*telegram.*"
+  ],
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 EduMaster/1.0.0",
+  "inject": [
+    "desktop-fixes.css",
+    "desktop-fixes.js"
+  ],
+  "browserwindowOptions": {
+    "webPreferences": {
+      "nodeIntegration": false,
+      "contextIsolation": true,
+      "enableRemoteModule": false,
+      "webSecurity": false,
+      "allowRunningInsecureContent": true,
+      "experimentalFeatures": true
+    }
+  }
+}

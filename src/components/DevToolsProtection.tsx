@@ -2,6 +2,16 @@ import React, { useEffect } from 'react';
 
 const DevToolsProtection: React.FC = () => {
   useEffect(() => {
+    // Don't run protection in desktop app
+    const isDesktopApp = window.navigator.userAgent.includes('Electron') || 
+                        window.process?.versions?.electron ||
+                        window.location.protocol === 'file:';
+    
+    if (isDesktopApp) {
+      console.log('Desktop app detected, skipping dev tools protection');
+      return;
+    }
+
     let devToolsDetected = false;
     let detectionInterval: NodeJS.Timeout;
     let initialLoadComplete = false;
