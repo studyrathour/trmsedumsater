@@ -4,7 +4,6 @@ import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/Header';
 import TelegramPopup from './components/TelegramPopup';
 import LoadingSpinner from './components/LoadingSpinner';
-import DevToolsProtection from './components/DevToolsProtection';
 import IframePreloader from './components/IframePreloader';
 import BottomNavigation from './components/BottomNavigation';
 import Home from './pages/Home';
@@ -22,8 +21,7 @@ const AppContent: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-900 text-gray-100 scrollbar-dark select-none">
-        <DevToolsProtection />
+      <div className="min-h-screen bg-gray-900 text-gray-100 scrollbar-dark">
         <IframePreloader />
         <Routes>
           <Route path="/" element={
