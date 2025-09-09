@@ -61,11 +61,8 @@ const BottomNavigation: React.FC = () => {
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Trigger chatbot open
-    const chatbotButton = document.querySelector('.chatbot-toggle') as HTMLButtonElement;
-    if (chatbotButton) {
-      chatbotButton.click();
-    }
+    // Trigger mobile chat open
+    window.dispatchEvent(new CustomEvent('openMobileChat'));
   };
 
   return (
