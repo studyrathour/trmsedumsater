@@ -6,6 +6,7 @@ import TelegramPopup from './components/TelegramPopup';
 import LoadingSpinner from './components/LoadingSpinner';
 import IframePreloader from './components/IframePreloader';
 import BottomNavigation from './components/BottomNavigation';
+import MobileChatbot from './components/MobileChatbot';
 import Home from './pages/Home';
 import LiveClasses from './pages/LiveClasses';
 import Books from './pages/Books';
@@ -14,6 +15,21 @@ import AIChatbot from './components/AIChatbot/AIChatbot';
 
 const AppContent: React.FC = () => {
   const { loading } = useApp();
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+
+  // Listen for mobile chat toggle
+  useEffect(() => {
+    const handleChatToggle = () => {
+      setIsMobileChatOpen(true);
+    };
+
+    // Add event listener for mobile chat
+    window.addEventListener('openMobileChat', handleChatToggle);
+    
+    return () => {
+      window.removeEventListener('openMobileChat', handleChatToggle);
+    };
+  }, []);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -63,6 +79,10 @@ const AppContent: React.FC = () => {
         
         <TelegramPopup />
         <AIChatbot />
+        <MobileChatbot 
+          isOpen={isMobileChatOpen} 
+          onClose={() => setIsMobileChatOpen(false)} 
+        />
         <BottomNavigation />
       </div>
     </Router>
