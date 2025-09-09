@@ -278,8 +278,9 @@ const AIChatbot: React.FC = () => {
     <>
       {/* Chatbot Toggle Button */}
       <button
+        className="chatbot-toggle"
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 ${isOpen ? 'z-30' : 'z-50'} w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group chatbot-pulse ${
+        className={`fixed bottom-6 right-6 ${isOpen ? 'z-30' : 'z-50'} w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group chatbot-pulse hidden md:flex ${
           isOpen ? 'rotate-90' : ''
         }`}
       >
@@ -313,7 +314,7 @@ const AIChatbot: React.FC = () => {
 
       {/* Chatbot Popup */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-gray-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-700 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-10rem)] md:max-w-96">
+        <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-gray-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-700 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-10rem)] md:max-w-96 hidden md:flex">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -501,34 +502,19 @@ const AIChatbot: React.FC = () => {
       {/* Mobile Responsive Styles */}
       <style jsx>{`
         @media (max-width: 640px) {
-          .fixed.bottom-24.right-6 {
-            position: fixed !important;
-            top: 4rem !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 5rem !important;
-            width: 100% !important;
-            height: calc(100vh - 9rem) !important;
-            border-radius: 0 !important;
-            max-width: none !important;
-            max-height: none !important;
-            z-index: 9999 !important;
+          .chatbot-toggle {
+            display: none !important;
           }
         }
         
         @media (max-width: 1024px) and (min-width: 641px) {
-          .fixed.bottom-24.right-6 {
-            bottom: 6rem !important;
-            right: 1rem !important;
-            max-height: calc(100vh - 12rem) !important;
-            z-index: 9999 !important;
+          .chatbot-toggle {
+            display: flex !important;
           }
         }
         
         @media (max-height: 700px) and (min-width: 641px) {
-          .fixed.bottom-24.right-6 {
-            height: calc(100vh - 8rem) !important;
-            max-height: calc(100vh - 8rem) !important;
+          .chatbot-toggle {
             bottom: 2rem !important;
           }
         }
